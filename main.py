@@ -32,10 +32,10 @@ def getLastWebinarId(is_new):
   year = now.year
   hour = now.hour
 
-  # if hour < 23:
-  #   day = getYestedayDate().day
-  #   month = getYestedayDate().month
-  #   year = getYestedayDate().year
+  if hour < 23:
+    day = getYestedayDate().day
+    month = getYestedayDate().month
+    year = getYestedayDate().year
 
   return getWebinarId(day, month, year, is_new)
 
