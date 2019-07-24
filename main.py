@@ -1,11 +1,10 @@
-
 import datetime
 import requests
 import json
 import pandas as pd
 from pandas import DataFrame
 import telebot
-import parser
+import pytz
 
 from telebot import types
 
@@ -25,7 +24,7 @@ def getWebinarId(day, month, year, is_new):
   return '9598:EvolutionLifeWebinar*'+ str_year +'-'+ str_month + '-'+ str_day +'T19:00:00'
 
 def getLastWebinarId(is_new):
-  now = datetime.datetime.today()
+  now = datetime.datetime.now(tz=pytz.timezone('Europe/Moscow'))
 
   day = now.day
   month = now.month
@@ -41,7 +40,7 @@ def getLastWebinarId(is_new):
 
 
 def getYestedayDate():
-  return datetime.datetime.today()- datetime.timedelta(days=1)
+  return datetime.datetime.now(tz=pytz.timezone('Europe/Moscow'))- datetime.timedelta(days=1)
 
 def getBase(is_new):
   bizon_token = 'rxuVsxjnESgeO4sgs3VHlbd4sgohNrxMuNjlohVHgmd4iljhN'
@@ -168,20 +167,25 @@ def start_handler(message):
 
 
 @bot.message_handler(content_types=['text'])
+
 def send_text(message):
+    now = datetime.datetime.now(tz=pytz.timezone('Europe/Moscow'))
+    print(now)
     if message.text == 'Новый вебинар':
-        bot.send_message(message.chat.id, 'Сейчас выгружу актуальную базу')
+        bot.send_message(message.chat.id, 'Сейчас выгружу актуальную базу на '+ now. strftime("%H:%M"))
+        bot.send_message(message.chat.id, 'База обновляется ежедневно в 23:00')
 
         doc = open(getBase(True), 'rb')
 
-
         bot.send_document(message.chat.id, doc)
+        bot.send_message(message.chat.id, 'Не забудь загрузить базу на гугл-диск   https://drive.google.com/drive/folders/1upyq0Uc2CqU93R_148BIgBQg5Gh6oV-V?usp=sharing')
 
     if message.text == 'Старый вебинар':
-        bot.send_message(message.chat.id, 'Сейчас выгружу актуальную базу')
+        bot.send_message(message.chat.id, 'Сейчас выгружу актуальную базу на ' + now. strftime("%H:%M"))
+        bot.send_message(message.chat.id, 'База обновляется ежедневно в 23:00')
         doc = open(getBase(False), 'rb')
         bot.send_document(message.chat.id, doc)
 
-
+        bot.send_message(message.chat.id, 'Не забудь загрузить базу на гугл-диск   https://drive.google.com/drive/folders/1upyq0Uc2CqU93R_148BIgBQg5Gh6oV-V?usp=sharing')
 
 bot.polling()
