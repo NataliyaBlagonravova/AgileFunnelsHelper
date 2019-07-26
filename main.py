@@ -173,7 +173,7 @@ def send_text(message):
     print(now)
     if message.text == 'Новый вебинар':
         bot.send_message(message.chat.id, 'Сейчас выгружу актуальную базу на '+ now. strftime("%H:%M"))
-        bot.send_message(message.chat.id, 'База обновляется ежедневно в 23:00')
+        bot.send_message(message.chat.id, 'База обновляется ежедневно в 23:00!')
 
         doc = open(getBase(True), 'rb')
 
@@ -182,7 +182,7 @@ def send_text(message):
 
     if message.text == 'Старый вебинар':
         bot.send_message(message.chat.id, 'Сейчас выгружу актуальную базу на ' + now. strftime("%H:%M"))
-        bot.send_message(message.chat.id, 'База обновляется ежедневно в 23:00')
+        bot.send_message(message.chat.id, 'База обновляется ежедневно в 23:00!')
         doc = open(getBase(False), 'rb')
         bot.send_document(message.chat.id, doc)
 
