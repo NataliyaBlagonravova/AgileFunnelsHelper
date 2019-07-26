@@ -24,7 +24,7 @@ def getWebinarId(day, month, year, is_new):
   return '9598:EvolutionLifeWebinar*'+ str_year +'-'+ str_month + '-'+ str_day +'T19:00:00'
 
 def getLastWebinarId(is_new):
-  now = datetime.datetime.now(pytz.timezone('Europe/Moscow'))
+  now = datetime.datetime.now()
 
   day = now.day
   month = now.month
@@ -40,7 +40,7 @@ def getLastWebinarId(is_new):
 
 
 def getYestedayDate():
-  return datetime.datetime.now(pytz.timezone('Europe/Moscow'))- datetime.timedelta(days=1)
+  return datetime.datetime.now()- datetime.timedelta(days=1)
 
 def getBase(is_new):
   bizon_token = 'rxuVsxjnESgeO4sgs3VHlbd4sgohNrxMuNjlohVHgmd4iljhN'
@@ -169,7 +169,7 @@ def start_handler(message):
 @bot.message_handler(content_types=['text'])
 
 def send_text(message):
-    now = datetime.datetime.now(pytz.timezone('Europe/Moscow'))
+    now = datetime.datetime.now()
     print(now)
     if message.text == 'Новый вебинар':
         bot.send_message(message.chat.id, 'Сейчас выгружу актуальную базу на '+ now. strftime("%H:%M"))
