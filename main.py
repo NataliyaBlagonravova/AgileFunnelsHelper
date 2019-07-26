@@ -149,7 +149,7 @@ def getBase(is_new):
 
   df3 = pd.merge(df, df1, on='id')
 
-  file_name = getLastWebinarId(is_new) + '.csv'
+  file_name = getLastWebinarId(is_new) + '!.csv'
   df3.to_csv(file_name, index=False)
 
   return file_name
