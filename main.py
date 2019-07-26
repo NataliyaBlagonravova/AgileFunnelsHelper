@@ -24,7 +24,7 @@ def getWebinarId(day, month, year, is_new):
   return '9598:EvolutionLifeWebinar*'+ str_year +'-'+ str_month + '-'+ str_day +'T19:00:00'
 
 def getLastWebinarId(is_new):
-  now = datetime.datetime.now()
+  now = datetime.datetime.now(pytz.timezone('Europe/Moscow'))
 
   day = now.day
   month = now.month
@@ -40,7 +40,7 @@ def getLastWebinarId(is_new):
 
 
 def getYestedayDate():
-  return datetime.datetime.now()- datetime.timedelta(days=1)
+  return datetime.datetime.now(pytz.timezone('Europe/Moscow'))- datetime.timedelta(days=1)
 
 def getBase(is_new):
   bizon_token = 'rxuVsxjnESgeO4sgs3VHlbd4sgohNrxMuNjlohVHgmd4iljhN'
@@ -117,14 +117,15 @@ def getBase(is_new):
 
     if 'view' in viewer:
         view = viewer['view']
-        date1 = datetime.datetime.fromtimestamp(view/1000.0)
+        date1 = datetime.datetime.fromtimestamp(view/1000.0, pytz.timezone('Europe/Moscow'))
         start_time = date1.strftime('%H:%M:%S')
+        print(start_time)
 
 
 
     if 'viewTill' in viewer:
         viewTill = viewer['viewTill']
-        date2 = datetime.datetime.fromtimestamp(viewTill/1000.0)
+        date2 = datetime.datetime.fromtimestamp(viewTill/1000.0, pytz.timezone('Europe/Moscow'))
         finish_time = date2.strftime('%H:%M:%S')
 
     if 'weight' in viewer:
@@ -169,11 +170,11 @@ def start_handler(message):
 @bot.message_handler(content_types=['text'])
 
 def send_text(message):
-    now = datetime.datetime.now()
+    now = datetime.datetime.now(pytz.timezone('Europe/Moscow'))
     print(now)
     if message.text == 'Новый вебинар':
         bot.send_message(message.chat.id, 'Сейчас выгружу актуальную базу на '+ now. strftime("%H:%M"))
-        bot.send_message(message.chat.id, 'База обновляется ежедневно в 23:00!')
+        bot.send_message(message.chat.id, 'База обновляется ежедневно в 23:00')
 
         doc = open(getBase(True), 'rb')
 
@@ -182,7 +183,7 @@ def send_text(message):
 
     if message.text == 'Старый вебинар':
         bot.send_message(message.chat.id, 'Сейчас выгружу актуальную базу на ' + now. strftime("%H:%M"))
-        bot.send_message(message.chat.id, 'База обновляется ежедневно в 23:00!')
+        bot.send_message(message.chat.id, 'База обновляется ежедневно в 23:00')
         doc = open(getBase(False), 'rb')
         bot.send_document(message.chat.id, doc)
 
