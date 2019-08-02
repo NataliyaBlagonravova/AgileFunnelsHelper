@@ -17,11 +17,52 @@ def getWebinarId(day, month, year, is_new):
 
   str_day = str(day)
   if day < 10:
-    str_day = '0' + day
+    str_day = '0' + str_day
 
   if is_new:
     return '9598:WebEvolutionLife*'+ str_year +'-'+ str_month + '-'+ str_day +'T19:00:00'
   return '9598:EvolutionLifeWebinar*'+ str_year +'-'+ str_month + '-'+ str_day +'T19:00:00'
+
+
+def str_to_time(time_str):
+  return datetime.datetime.strptime(time_str,'%H:%M:%S')
+
+def time_to_str(time):
+  return time.strftime('%H:%M:%S')
+
+def merge_rows(row_1, row_2):
+    start_time_1  = str_to_time(row_1['Время начала'])
+    start_time_2 = str_to_time(row_2['Время начала'])
+    end_time_1 = str_to_time(row_1['Время завершения'])
+    end_time_2 = str_to_time(row_2['Время завершения'])
+
+    start_time = start_time_1
+    if start_time_2 < start_time_1:
+        start_time = start_time_2
+
+    end_time = end_time_1
+    if end_time_2 > end_time_1:
+        end_time = end_time_2
+
+    row_2['Время начала'] = time_to_str(start_time)
+    row_2['Время завершения'] = time_to_str(end_time)
+    if row_1['IP'] != row_2['IP']:
+        row_2['IP'] = row_2['IP'] + ' ' + row_1['IP']
+
+
+    if row_1['Нажал на кнопки'] != row_2['Нажал на кнопки']:
+        row_2['Нажал на кнопки'] = row_2['Нажал на кнопки'] + " " + row_1['Нажал на кнопки']
+
+    if row_1['Источник трафика'] != row_2['Источник трафика']:
+        row_2['Источник трафика'] = row_2['Источник трафика'] + " " + row_1['Источник трафика']
+
+    row_2['Комментарии'].append(row_1['Комментарии'])
+
+    print('start: ' + time_to_str(start_time))
+    print('end: ' + time_to_str(end_time))
+
+    return row_2
+
 
 def getLastWebinarId(is_new):
   now = datetime.datetime.now(pytz.timezone('Europe/Moscow'))
@@ -70,7 +111,7 @@ def getBase(is_new):
     cliens_messages.append([id,  messages.get(id)])
 
 
-  df1 = DataFrame(cliens_messages ,columns=['id', 'messages'])
+  df1 = DataFrame(cliens_messages ,columns=['id', 'Комментарии'])
 
 
   rating = y['rating']
@@ -119,8 +160,6 @@ def getBase(is_new):
         view = viewer['view']
         date1 = datetime.datetime.fromtimestamp(view/1000.0, pytz.timezone('Europe/Moscow'))
         start_time = date1.strftime('%H:%M:%S')
-        print(start_time)
-
 
 
     if 'viewTill' in viewer:
@@ -141,16 +180,44 @@ def getBase(is_new):
         utm_source = viewer['utm_source']
 
 
-    watched_time = date2 - date1
+    cliens_info.append([user_id, username, phone, country, city, ip, start_time, finish_time, '111', clickFile, utm_source])
 
-    cliens_info.append([user_id, username, phone, country, city, ip, start_time, finish_time, clickFile, utm_source])
-
-  df = DataFrame(cliens_info ,columns=['id', 'Имя', 'Телефон', 'Страна', 'Город', 'IP', 'Время начала', 'Время завершения', 'Нажал на кнопки', 'Источник трафика'])
+  df = DataFrame(cliens_info ,columns=['id', 'Имя', 'Телефон', 'Страна', 'Город', 'IP', 'Время начала', 'Время завершения', 'Время просмотра','Нажал на кнопки', 'Источник трафика'])
 
   df3 = pd.merge(df, df1, on='id')
 
-  file_name = getLastWebinarId(is_new) + '!.csv'
-  df3.to_csv(file_name, index=False)
+  df_sorted = df3.sort_values(by=['Телефон'])
+
+  last_phone = None
+  prev_row = None
+  prev_index = 0
+  for index, row in df_sorted.iterrows():
+      phone = row['Телефон']
+      if last_phone == phone:
+          print("Дубликат: ", phone)
+          merge_row = merge_rows(row, prev_row)
+          df_sorted.drop(index=prev_index, inplace=True)
+          df_sorted.loc[index] = merge_row
+
+      last_phone = phone
+      prev_row = row
+      prev_index = index
+
+
+  print('Дублекаты по номеру телефона удалены')
+
+
+  for index, row in df_sorted.iterrows():
+      start_time =  str_to_time(row['Время начала'])
+      end_time =  str_to_time(row['Время завершения'])
+      watched_time = end_time - start_time
+      df_sorted.loc[index]['Время просмотра'] = str(watched_time)
+
+
+  df_sorted = df_sorted.sort_values(by=['Время просмотра'], ascending=False)
+
+  file_name = getLastWebinarId(is_new) + '@#.csv'
+  df_sorted.to_csv(file_name, index=False)
 
   return file_name
 
@@ -171,7 +238,6 @@ def start_handler(message):
 
 def send_text(message):
     now = datetime.datetime.now(pytz.timezone('Europe/Moscow'))
-    print(now)
     if message.text == 'Новый вебинар':
         bot.send_message(message.chat.id, 'Сейчас выгружу актуальную базу на '+ now. strftime("%H:%M"))
         bot.send_message(message.chat.id, 'База обновляется ежедневно в 23:00')
