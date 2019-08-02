@@ -229,7 +229,7 @@ bot = telebot.TeleBot(TOKEN)
 @bot.message_handler(commands=['start', 'go'])
 def start_handler(message):
     markup = types.ReplyKeyboardMarkup()
-    markup.row('Новый вебинар')
+    #markup.row('Новый вебинар')
     markup.row('Старый вебинар')
     bot.send_message(message.chat.id, "Какую базу выгрузить?", reply_markup=markup)
 
