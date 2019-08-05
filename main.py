@@ -63,8 +63,7 @@ def merge_rows(row_1, row_2):
 
     return row_2
 
-
-def getLastWebinarId(is_new):
+def getLastWebnarDate():
   now = datetime.datetime.now(pytz.timezone('Europe/Moscow'))
 
   day = now.day
@@ -77,6 +76,12 @@ def getLastWebinarId(is_new):
     month = getYestedayDate().month
     year = getYestedayDate().year
 
+  return day, month, year
+
+
+
+def getLastWebinarId(is_new):
+  day, month, year = getLastWebnarDate()
   return getWebinarId(day, month, year, is_new)
 
 
@@ -179,10 +184,13 @@ def getBase(is_new):
     if 'utm_source' in viewer:
         utm_source = viewer['utm_source']
 
+    day, month, year = getLastWebnarDate()
+    webinar_name = 'Вебинар ' + str(day) + '.' + str(month) + '.' + str(year)
 
-    cliens_info.append([user_id, username, phone, country, city, ip, start_time, finish_time, '111', clickFile, utm_source])
 
-  df = DataFrame(cliens_info ,columns=['id', 'Имя', 'Телефон', 'Страна', 'Город', 'IP', 'Время начала', 'Время завершения', 'Время просмотра','Нажал на кнопки', 'Источник трафика'])
+    cliens_info.append([user_id, webinar_name, username, phone, country, city, ip, start_time, finish_time, '111', clickFile, utm_source])
+
+  df = DataFrame(cliens_info ,columns=['id', 'Вебинар', 'Имя', 'Телефон', 'Страна', 'Город', 'IP', 'Время начала', 'Время завершения', 'Время просмотра','Нажал на кнопки', 'Источник трафика'])
 
   df3 = pd.merge(df, df1, on='id')
 
@@ -216,7 +224,9 @@ def getBase(is_new):
 
   df_sorted = df_sorted.sort_values(by=['Время просмотра'], ascending=False)
 
-  file_name = getLastWebinarId(is_new) + '@#.csv'
+  df_sorted.drop(columns='id', inplace=True)
+
+  file_name = webinar_name + '!.csv'
   df_sorted.to_csv(file_name, index=False)
 
   return file_name
