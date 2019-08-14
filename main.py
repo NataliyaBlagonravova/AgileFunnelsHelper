@@ -6,8 +6,6 @@ from pandas import DataFrame
 import telebot
 import pytz
 import math
-import schedule
-import time
 
 from telebot import types
 
@@ -419,9 +417,6 @@ def getBase(is_new):
   df_sorted.to_csv(file_name, index=False)
 
   return file_name
-
-def job():
-    print("I'm working...")
 
 
 TOKEN = '848616404:AAFByzTdfhdG5G7tfhFGxpbEOwakitBqpmw'
