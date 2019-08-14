@@ -1,12 +1,201 @@
-import datetime
+import import datetime
 import requests
 import json
 import pandas as pd
 from pandas import DataFrame
 import telebot
 import pytz
+import math
+import schedule
+import time
 
 from telebot import types
+
+custom_ids = {
+    'webinar': 482987,
+    'country': 482989,
+    'city': 482991,
+    'ip':482993,
+    'start_time':482995,
+    'end_time':482997,
+    'total_time':482999,
+    'buttons':483003,
+    'source':483001,
+    'comments':483587,
+    'phone':93069
+}
+
+def create_item(user_data):
+    item =  {
+        'name': user_data['name'],
+        'tags': user_data['webinar'],
+        'custom_fields':[
+        {
+        'id': custom_ids['webinar'],
+        'values': [{
+          'value' : user_data['webinar']
+                  }]
+        },
+        {
+        'id': custom_ids['country'],
+        'values': [{
+          'value' : user_data['country']
+                  }]
+        },
+        {
+        'id': custom_ids['city'],
+        'values': [{
+          'value' : user_data['city']
+                  }]
+        },
+        {
+        'id': custom_ids['ip'],
+        'values': [{
+          'value' : user_data['ip']
+                  }]
+        },
+        {
+        'id': custom_ids['start_time'],
+        'values': [{
+          'value' : user_data['start_time']
+                  }]
+        },
+        {
+        'id': custom_ids['end_time'],
+        'values': [{
+          'value' : user_data['end_time']
+                  }]
+        },
+        {
+        'id': custom_ids['total_time'],
+        'values': [{
+          'value' : user_data['total_time']
+                  }]
+        },
+        {
+        'id': custom_ids['buttons'],
+        'values': [{
+          'value' : user_data['buttons']
+                  }]
+        },
+        {
+        'id': custom_ids['source'],
+        'values': [{
+          'value' : user_data['source']
+                  }]
+        },
+        {
+        'id': custom_ids['phone'],
+        'values': [{
+          'value' : user_data['phone'],
+          'enum'  : "WORK"
+                  }]
+        },
+        {
+        'id': custom_ids['comments'],
+        'values': [{
+          'value' : user_data['comments']
+                  }]
+        }]
+    }
+    return item
+
+def is_contact_in_crm(user_data):
+  URL = 'https://agilefunnels.amocrm.ru/private/api/auth.php'
+  user_login = 'chekmchekm@yandex.ru'
+  user_hash = '21b83fa01534cfd856912f7de84a82b2a9abd65d'
+  data = {'USER_LOGIN': user_login, 'USER_HASH':user_hash}
+  session = requests.Session()
+  r = session.post(url = URL, data = data)
+
+  parms =  {'limit_rows': '500'}
+
+  r = session.get(url = 'https://agilefunnels.amocrm.ru/api/v2/contacts', params = parms)
+
+
+  if r.status_code == 204:
+    print('База пуста')
+    return False
+
+  data = r.json()
+  data1 = data['_embedded']
+  items = data1['items']
+
+  for item in items:
+    custom_fields = item['custom_fields']
+    number = None
+    webinar = None
+    for field in custom_fields:
+      if field['id'] == custom_ids['webinar']:
+        values = field['values']
+        webinar = values[0]['value']
+      if field['id'] == custom_ids['phone']:
+        values = field['values']
+        number = values[0]['value']
+      if number == user_data['phone'] and webinar == user_data['webinar']:
+        print(webinar, ' ', number)
+        return True
+
+  return False
+
+
+
+
+def upload_df_to_crm(df):
+
+  df['Имя'] = df['Имя'].astype('str')
+  df['Телефон'] = df['Телефон'].astype('str')
+  df['Вебинар'] = df['Вебинар'].astype('str')
+  df['Страна'] = df['Страна'].astype('str')
+  df['Город'] = df['Город'].astype('str')
+  df['IP'] = df['IP'].astype('str')
+  df['Время начала'] = df['Время начала'].astype('str')
+  df['Время завершения'] = df['Время завершения'].astype('str')
+  df['Время просмотра'] = df['Время просмотра'].astype('str')
+  df['Нажал на кнопки'] = df['Нажал на кнопки'].astype('str')
+  df['Источник трафика'] = df['Источник трафика'].astype('str')
+  df['Комментарии'] = df['Комментарии'].astype('str')
+
+  URL = 'https://agilefunnels.amocrm.ru/private/api/auth.php'
+  user_login = 'chekmchekm@yandex.ru'
+  user_hash = '21b83fa01534cfd856912f7de84a82b2a9abd65d'
+  data = {'USER_LOGIN': user_login, 'USER_HASH': user_hash}
+  session = requests.Session()
+  r = session.post(url = URL, data = data)
+
+  for index, row in df.iterrows():
+
+
+    user_data = {
+    'name': row['Имя'] if row['Имя'] != None else '',
+    'phone': row['Телефон'] if row['Телефон'] != None else '',
+    'webinar':row['Вебинар'] if row['Вебинар'] != None else '',
+    'country':row['Страна'] if row['Страна'] != None else '',
+    'city':row['Город'] if row['Город'] != None else '',
+    'ip':row['IP'] if row['IP'] != None else '',
+    'start_time':row['Время начала'] if row['Время начала'] != None else '',
+    'end_time':row['Время завершения'] if row['Время завершения'] != None else '',
+    'total_time':row['Время просмотра'] if row['Время просмотра'] != None else '',
+    'buttons':row['Нажал на кнопки'] if row['Нажал на кнопки'] != 'nan' else '',
+    'source': row['Источник трафика'] if row['Источник трафика'] != None else '',
+    'comments':row['Комментарии'] if row['Комментарии'] != None else ''
+    }
+
+
+    stri = user_data['buttons'] + ' 1'
+    data = {
+    'add': []
+    }
+
+
+    if not is_contact_in_crm(user_data):
+      data['add'].append(create_item(user_data))
+      r = session.post('https://agilefunnels.amocrm.ru/api/v2/contacts', data = json.dumps(data))
+      print("Result is:%s"%r.text)
+    else:
+      print('In CRM')
+
+
 
 def getWebinarId(day, month, year, is_new):
   str_year = str(year)
@@ -226,15 +415,17 @@ def getBase(is_new):
 
   df_sorted.drop(columns='id', inplace=True)
 
-  file_name = webinar_name + '!.csv'
+  file_name = webinar_name + '.csv'
   df_sorted.to_csv(file_name, index=False)
 
   return file_name
 
+def job():
+    print("I'm working...")
+
 
 TOKEN = '848616404:AAFByzTdfhdG5G7tfhFGxpbEOwakitBqpmw'
 bot = telebot.TeleBot(TOKEN)
-
 
 @bot.message_handler(commands=['start', 'go'])
 def start_handler(message):
@@ -252,7 +443,8 @@ def send_text(message):
         bot.send_message(message.chat.id, 'Сейчас выгружу актуальную базу на '+ now. strftime("%H:%M"))
         bot.send_message(message.chat.id, 'База обновляется ежедневно в 23:00')
 
-        doc = open(getBase(True), 'rb')
+        filename = getBase(False)
+        doc = open(filename, 'rb')
 
         bot.send_document(message.chat.id, doc)
         bot.send_message(message.chat.id, 'Не забудь загрузить базу на гугл-диск   https://drive.google.com/drive/folders/1upyq0Uc2CqU93R_148BIgBQg5Gh6oV-V?usp=sharing')
@@ -260,9 +452,17 @@ def send_text(message):
     if message.text == 'Старый вебинар':
         bot.send_message(message.chat.id, 'Сейчас выгружу актуальную базу на ' + now. strftime("%H:%M"))
         bot.send_message(message.chat.id, 'База обновляется ежедневно в 23:00')
-        doc = open(getBase(False), 'rb')
-        bot.send_document(message.chat.id, doc)
 
-        bot.send_message(message.chat.id, 'Не забудь загрузить базу на гугл-диск   https://drive.google.com/drive/folders/1upyq0Uc2CqU93R_148BIgBQg5Gh6oV-V?usp=sharing')
+        filename = getBase(False)
+        doc = open(filename, 'rb')
+
+        bot.send_document(message.chat.id, doc)
+        bot.send_message(message.chat.id, 'База начала выгружаться в CRM')
+        df = pd.read_csv(filename)
+        upload_df_to_crm(df)
+        bot.send_message(message.chat.id, 'База выгружена')
+
+
+
 
 bot.polling()
