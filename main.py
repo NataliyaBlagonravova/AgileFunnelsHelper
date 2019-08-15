@@ -452,4 +452,6 @@ def send_text(message):
         bot.send_document(message.chat.id, doc)
         bot.send_message(message.chat.id, 'База выгружена CRM')
 
+bot.polling()
+
 
