@@ -407,7 +407,7 @@ def getBase(is_new):
 
   df_sorted.drop(columns='id', inplace=True)
 
-  file_name = webinar_name + '2.csv'
+  file_name = webinar_name + '.csv'
 
   upload_df_to_crm(df_sorted)
 
