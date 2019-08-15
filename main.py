@@ -140,20 +140,6 @@ def is_contact_in_crm(user_data):
 
 
 def upload_df_to_crm(df):
-
-  df['Имя'] = df['Имя'].astype('str')
-  df['Телефон'] = df['Телефон'].astype('str')
-  df['Вебинар'] = df['Вебинар'].astype('str')
-  df['Страна'] = df['Страна'].astype('str')
-  df['Город'] = df['Город'].astype('str')
-  df['IP'] = df['IP'].astype('str')
-  df['Время начала'] = df['Время начала'].astype('str')
-  df['Время завершения'] = df['Время завершения'].astype('str')
-  df['Время просмотра'] = df['Время просмотра'].astype('str')
-  df['Нажал на кнопки'] = df['Нажал на кнопки'].astype('str')
-  df['Источник трафика'] = df['Источник трафика'].astype('str')
-  df['Комментарии'] = df['Комментарии'].astype('str')
-
   URL = 'https://agilefunnels.amocrm.ru/private/api/auth.php'
   user_login = 'chekmchekm@yandex.ru'
   user_hash = '21b83fa01534cfd856912f7de84a82b2a9abd65d'
@@ -180,7 +166,8 @@ def upload_df_to_crm(df):
     }
 
 
-    stri = user_data['buttons'] + ' 1'
+
+
     data = {
     'add': []
     }
@@ -243,7 +230,10 @@ def merge_rows(row_1, row_2):
     if row_1['Источник трафика'] != row_2['Источник трафика']:
         row_2['Источник трафика'] = row_2['Источник трафика'] + " " + row_1['Источник трафика']
 
-    row_2['Комментарии'].append(row_1['Комментарии'])
+    if start_time_1 < start_time_2:
+        row_2['Комментарии'] = row_1['Комментарии'] + '' + row_2['Комментарии']
+    else:
+        row_2['Комментарии'] = row_2['Комментарии'] + '' + row_2['Комментарии']
 
     print('start: ' + time_to_str(start_time))
     print('end: ' + time_to_str(end_time))
@@ -297,10 +287,13 @@ def getBase(is_new):
   messages = json.loads(messages)
 
 
+
+
+
   cliens_messages = []
 
   for id in messages:
-    cliens_messages.append([id,  messages.get(id)])
+    cliens_messages.append([id, str(messages.get(id)).strip('[]')])
 
 
   df1 = DataFrame(cliens_messages ,columns=['id', 'Комментарии'])
@@ -379,6 +372,7 @@ def getBase(is_new):
 
   df = DataFrame(cliens_info ,columns=['id', 'Вебинар', 'Имя', 'Телефон', 'Страна', 'Город', 'IP', 'Время начала', 'Время завершения', 'Время просмотра','Нажал на кнопки', 'Источник трафика'])
 
+
   df3 = pd.merge(df, df1, on='id')
 
   df_sorted = df3.sort_values(by=['Телефон'])
@@ -413,10 +407,14 @@ def getBase(is_new):
 
   df_sorted.drop(columns='id', inplace=True)
 
-  file_name = webinar_name + '.csv'
+  file_name = webinar_name + '2.csv'
+
+  upload_df_to_crm(df_sorted)
+
   df_sorted.to_csv(file_name, index=False)
 
   return file_name
+
 
 
 TOKEN = '848616404:AAFByzTdfhdG5G7tfhFGxpbEOwakitBqpmw'
@@ -452,12 +450,6 @@ def send_text(message):
         doc = open(filename, 'rb')
 
         bot.send_document(message.chat.id, doc)
-        bot.send_message(message.chat.id, 'База начала выгружаться в CRM')
-        df = pd.read_csv(filename)
-        upload_df_to_crm(df)
-        bot.send_message(message.chat.id, 'База выгружена')
+        bot.send_message(message.chat.id, 'База выгружена CRM')
 
 
-
-
-bot.polling()
